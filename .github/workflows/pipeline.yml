@@ -1,0 +1,116 @@
+---
+name: Pipeline CI/CD
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  # ---------------------------------------------------------------------
+  # ETAPA 1 - QUALIDADE
+  # Action do Marketplace: super-linter/super-linter
+  # Analise estatica do codigo antes de qualquer teste.
+  # ---------------------------------------------------------------------
+  qualidade:
+    name: 1 - Qualidade de codigo
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+      statuses: write
+    steps:
+      - name: Obter o codigo do repositorio
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Analise estatica com Super-Linter
+        uses: super-linter/super-linter/slim@v8
+        env:
+          DEFAULT_BRANCH: main
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VALIDATE_ALL_CODEBASE: true
+          VALIDATE_JAVASCRIPT_ES: true
+          VALIDATE_JSON: true
+          FILTER_REGEX_EXCLUDE: (node_modules|dist|test-results)/.*
+          LOG_LEVEL: INFO
+
+  # ---------------------------------------------------------------------
+  # ETAPA 2 - TESTES
+  # Action do Marketplace: dorny/test-reporter
+  # Executa os testes e publica o relatorio JUnit na UI do Actions.
+  # ---------------------------------------------------------------------
+  testes:
+    name: 2 - Testes automatizados
+    needs: qualidade
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+      checks: write
+    steps:
+      - name: Obter o codigo do repositorio
+        uses: actions/checkout@v4
+
+      - name: Preparar ambiente Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Instalar dependencias
+        run: npm install
+
+      - name: Executar testes unitarios (Vitest - saida JUnit)
+        run: npm run test:ci
+
+      - name: Publicar relatorio de testes
+        uses: dorny/test-reporter@v3
+        if: always()
+        with:
+          name: Resultado dos testes (Vitest)
+          path: test-results/junit.xml
+          reporter: jest-junit
+          fail-on-error: true
+
+  # ---------------------------------------------------------------------
+  # ETAPA 3 - BUILD E DEPLOY
+  # Action do Marketplace: peaceiris/actions-gh-pages
+  # Gera a pasta dist/ e publica o site no GitHub Pages.
+  # ---------------------------------------------------------------------
+  deploy:
+    name: 3 - Build e deploy
+    needs: testes
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Obter o codigo do repositorio
+        uses: actions/checkout@v4
+
+      - name: Preparar ambiente Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Instalar dependencias
+        run: npm install
+
+      - name: Gerar build em dist/
+        run: npm run build
+
+      - name: Publicar no GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        if: github.ref == 'refs/heads/main'
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+          publish_branch: gh-pages
+          user_name: github-actions[bot]
+          user_email: github-actions[bot]@users.noreply.github.com
+          commit_message: "deploy: publica dist/ gerado pela pipeline"
