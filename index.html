@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Painel de Metricas DORA</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header>
+      <h1>Painel de Metricas DORA</h1>
+      <p>
+        Calcula as quatro metricas do relatorio DORA a partir dos dados de
+        entrega de um time. Projeto da Aula 5 de DevOps.
+      </p>
+    </header>
+
+    <main>
+      <form id="formulario">
+        <fieldset>
+          <legend>Periodo analisado</legend>
+
+          <label for="totalDeploys">Total de deploys</label>
+          <input id="totalDeploys" type="number" min="0" value="40" required />
+
+          <label for="dias">Dias do periodo</label>
+          <input id="dias" type="number" min="1" value="30" required />
+
+          <label for="deploysComFalha">Deploys que falharam</label>
+          <input id="deploysComFalha" type="number" min="0" value="2" required />
+        </fieldset>
+
+        <fieldset>
+          <legend>Lead time (uma linha por mudanca: commit ; deploy)</legend>
+          <textarea id="leadTime" rows="4">
+2026-09-01T00:00:00Z ; 2026-09-01T06:00:00Z
+2026-09-02T00:00:00Z ; 2026-09-02T10:00:00Z</textarea
+          >
+        </fieldset>
+
+        <fieldset>
+          <legend>Incidentes (uma linha por incidente: inicio ; fim)</legend>
+          <textarea id="incidentes" rows="3">
+2026-09-03T00:00:00Z ; 2026-09-03T00:30:00Z</textarea
+          >
+        </fieldset>
+
+        <button type="submit">Calcular metricas</button>
+      </form>
+
+      <section id="resultado" aria-live="polite"></section>
+    </main>
+
+    <footer>
+      <p>
+        Pipeline automatizada com Super-Linter, Test Reporter e
+        actions-gh-pages.
+      </p>
+    </footer>
+
+    <script type="module" src="app.js"></script>
+  </body>
+</html>
