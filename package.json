@@ -1,0 +1,23 @@
+{
+  "name": "devops-aula5",
+  "version": "1.0.0",
+  "description": "Painel de metricas DORA com pipeline automatizada no GitHub Actions",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "vitest run",
+    "test:ci": "vitest run --reporter=junit --outputFile=test-results/junit.xml",
+    "build": "node scripts/build.mjs"
+  },
+  "keywords": [
+    "devops",
+    "ci-cd",
+    "github-actions",
+    "dora"
+  ],
+  "author": "Dracon-46",
+  "license": "MIT",
+  "devDependencies": {
+    "vitest": "^2.1.8"
+  }
+}
